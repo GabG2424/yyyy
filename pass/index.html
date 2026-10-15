@@ -1,0 +1,685 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FocusFlow Study Timer</title>
+
+<style>
+:root {
+  --bg: #0c1020;
+  --panel: #181f38;
+  --text: #f5f7ff;
+  --muted: #a7b0cf;
+  --accent: #8b7cff;
+  --green: #53e0c0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 25px 15px;
+  font-family: Arial, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, #30265c, transparent 45%),
+    var(--bg);
+}
+
+.app {
+  max-width: 1000px;
+  margin: auto;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 25px;
+}
+
+header p, .muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 20px;
+}
+
+.panel {
+  background: rgba(24, 31, 56, .94);
+  padding: 24px;
+  border: 1px solid #ffffff14;
+  border-radius: 22px;
+  margin-bottom: 18px;
+  box-shadow: 0 15px 40px #0003;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 25px;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 11px;
+  padding: 12px 15px;
+  font-weight: bold;
+}
+
+.tab {
+  flex: 1;
+  color: var(--muted);
+  background: #10162b;
+}
+
+.tab.active {
+  color: white;
+  background: #494071;
+}
+
+.timer-ring {
+  width: 260px;
+  height: 260px;
+  max-width: 100%;
+  margin: 20px auto;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(
+    var(--accent) var(--progress, 100%),
+    #2a3150 0
+  );
+  position: relative;
+}
+
+.timer-ring::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border-radius: 50%;
+  background: #131a30;
+}
+
+.timer-content {
+  position: relative;
+  text-align: center;
+}
+
+.timer-label {
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.time {
+  font-size: 53px;
+  font-weight: bold;
+  margin: 12px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.status {
+  color: var(--green);
+  font-size: 12px;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.primary {
+  color: white;
+  background: linear-gradient(135deg, #8b7cff, #6359d9);
+  min-width: 140px;
+}
+
+.secondary {
+  color: white;
+  background: #303957;
+}
+
+button:hover {
+  filter: brightness(1.15);
+}
+
+h2, h3 {
+  margin-top: 0;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat {
+  padding: 17px;
+  border-radius: 15px;
+  background: #222b49;
+}
+
+.stat-value {
+  font-size: 27px;
+  font-weight: bold;
+  margin: 10px 0 5px;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.progress {
+  height: 8px;
+  background: #0c1326;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  transition: width .3s;
+}
+
+label {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 7px;
+}
+
+input[type="number"], input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ffffff20;
+  background: #10162b;
+  color: white;
+  margin-bottom: 15px;
+}
+
+.task-row {
+  display: flex;
+  gap: 8px;
+}
+
+.task-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.add {
+  color: white;
+  background: var(--accent);
+  margin-bottom: 15px;
+}
+
+.task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.task {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  background: #222b49;
+  font-size: 13px;
+}
+
+.task input {
+  accent-color: var(--green);
+}
+
+.task span {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.task.done span {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.remove {
+  padding: 3px 7px;
+  color: #ff9dba;
+  background: transparent;
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 10px;
+}
+
+@media (max-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    padding: 18px;
+  }
+
+  .timer-ring {
+    width: 235px;
+    height: 235px;
+  }
+
+  .time {
+    font-size: 46px;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <header>
+    <div>
+      <h1>✦ FocusFlow</h1>
+      <p>Your little space to focus</p>
+    </div>
+    <div id="today" class="muted"></div>
+  </header>
+
+  <h2>Make today count.</h2>
+  <p class="muted">Small focus sessions. Real progress.</p>
+
+  <main class="layout">
+
+    <section class="panel">
+      <div class="tabs">
+        <button class="tab active" data-mode="pomodoro">Study</button>
+        <button class="tab" data-mode="short">Short Break</button>
+        <button class="tab" data-mode="long">Long Break</button>
+      </div>
+
+      <div class="timer-ring" id="ring">
+        <div class="timer-content">
+          <div class="timer-label" id="timerLabel">Focus Time</div>
+          <div class="time" id="time">25:00</div>
+          <div class="status" id="status">Ready when you are</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="primary" id="startBtn">▶ Start</button>
+        <button class="secondary" id="resetBtn">↺ Reset</button>
+      </div>
+
+      <p class="muted" style="text-align:center;margin-top:20px">
+        Focus on one task at a time.
+      </p>
+    </section>
+
+    <div>
+      <section class="panel">
+        <h3>Your Progress</h3>
+
+        <div class="stats">
+          <div class="stat">
+            <div>⚡</div>
+            <div class="stat-value" id="sessions">0</div>
+            <div class="stat-label">Completed sessions</div>
+          </div>
+
+          <div class="stat">
+            <div>◷</div>
+            <div class="stat-value" id="minutes">0</div>
+            <div class="stat-label">Minutes focused</div>
+          </div>
+        </div>
+
+        <p class="muted" id="goalText">Daily goal: 0 / 120 minutes</p>
+        <div class="progress">
+          <div class="progress-fill" id="goalBar"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3>Customize Timer</h3>
+
+        <label for="studyMins">Study duration (minutes)</label>
+        <input type="number" id="studyMins" min="1" max="180" value="25">
+
+        <label for="breakMins">Short break (minutes)</label>
+        <input type="number" id="breakMins" min="1" max="60" value="5">
+
+        <label for="goalMins">Daily focus goal (minutes)</label>
+        <input type="number" id="goalMins" min="1" max="1440" value="120">
+
+        <button class="secondary" id="applyBtn" style="width:100%">
+          Apply Settings
+        </button>
+      </section>
+
+      <section class="panel">
+        <h3>Study Checklist</h3>
+
+        <form class="task-row" id="taskForm">
+          <input id="taskInput" type="text"
+                 maxlength="100"
+                 placeholder="Add a study task..."
+                 aria-label="Study task">
+          <button class="add" type="submit">+</button>
+        </form>
+
+        <ul class="task-list" id="taskList"></ul>
+      </section>
+    </div>
+  </main>
+
+  <footer>Made for calmer, more focused study sessions ✦</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const durations = {
+  pomodoro: 25,
+  short: 5,
+  long: 15
+};
+
+let mode = "pomodoro";
+let total = durations[mode] * 60;
+let remaining = total;
+let timer = null;
+let endAt = 0;
+let sessions = 0;
+let focusedMinutes = 0;
+let tasks = [];
+
+$("today").textContent = new Date().toLocaleDateString(
+  undefined,
+  { weekday: "short", month: "short", day: "numeric" }
+);
+
+function formatTime(seconds) {
+  const minutes = Math.floor(seconds / 60)
+    .toString().padStart(2, "0");
+  const secs = (seconds % 60)
+    .toString().padStart(2, "0");
+
+  return `${minutes}:${secs}`;
+}
+
+function render() {
+  $("time").textContent = formatTime(remaining);
+
+  const percentage = total > 0
+    ? (remaining / total) * 100
+    : 0;
+
+  $("ring").style.setProperty("--progress", percentage + "%");
+
+  const labels = {
+    pomodoro: "Focus Time",
+    short: "Short Break",
+    long: "Long Break"
+  };
+
+  $("timerLabel").textContent = labels[mode];
+  $("sessions").textContent = sessions;
+  $("minutes").textContent = focusedMinutes;
+
+  $("startBtn").textContent = timer
+    ? "Ⅱ Pause"
+    : remaining === 0
+      ? "↻ Start Again"
+      : remaining < total
+        ? "▶ Resume"
+        : "▶ Start";
+
+  $("status").textContent = timer
+    ? "You're in the zone..."
+    : remaining === 0
+      ? "Session complete!"
+      : remaining < total
+        ? "Paused — take your time"
+        : "Ready when you are";
+
+  const goal = Math.max(1, Number($("goalMins").value) || 120);
+
+  $("goalText").textContent =
+    `Daily goal: ${focusedMinutes} / ${goal} minutes`;
+
+  $("goalBar").style.width =
+    Math.min(100, focusedMinutes / goal * 100) + "%";
+
+  document.title = `${formatTime(remaining)} — FocusFlow`;
+
+  document.querySelectorAll(".tab").forEach(button => {
+    button.classList.toggle(
+      "active",
+      button.dataset.mode === mode
+    );
+  });
+}
+
+function stopTimer() {
+  if (timer) clearInterval(timer);
+  timer = null;
+}
+
+function playSound() {
+  try {
+    const AudioContextClass =
+      window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContextClass) return;
+
+    const context = new AudioContextClass();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+
+    oscillator.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(
+      0.001,
+      context.currentTime + 0.7
+    );
+
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.7);
+    oscillator.onended = () => context.close();
+  } catch (error) {
+    console.log("Sound is unavailable.");
+  }
+}
+
+function completeTimer() {
+  stopTimer();
+  remaining = 0;
+
+  if (mode === "pomodoro") {
+    sessions++;
+    focusedMinutes += total / 60;
+  }
+
+  render();
+  $("status").textContent = mode === "pomodoro"
+    ? "Focus complete — enjoy a break!"
+    : "Break finished — you've got this!";
+
+  playSound();
+}
+
+function tick() {
+  remaining = Math.max(
+    0,
+    Math.ceil((endAt - Date.now()) / 1000)
+  );
+
+  if (remaining <= 0) {
+    completeTimer();
+  } else {
+    render();
+  }
+}
+
+function startTimer() {
+  if (timer) {
+    remaining = Math.max(
+      0,
+      Math.ceil((endAt - Date.now()) / 1000)
+    );
+
+    stopTimer();
+    render();
+    return;
+  }
+
+  if (remaining <= 0) remaining = total;
+
+  endAt = Date.now() + remaining * 1000;
+  timer = setInterval(tick, 250);
+  render();
+}
+
+function setMode(newMode) {
+  stopTimer();
+  mode = newMode;
+  total = durations[mode] * 60;
+  remaining = total;
+  render();
+}
+
+$("startBtn").addEventListener("click", startTimer);
+
+$("resetBtn").addEventListener("click", () => {
+  stopTimer();
+  remaining = total;
+  render();
+});
+
+document.querySelectorAll(".tab").forEach(button => {
+  button.addEventListener("click", () => {
+    setMode(button.dataset.mode);
+  });
+});
+
+$("applyBtn").addEventListener("click", () => {
+  stopTimer();
+
+  const study = Math.min(180, Math.max(
+    1, Number($("studyMins").value) || 25
+  ));
+
+  const shortBreak = Math.min(60, Math.max(
+    1, Number($("breakMins").value) || 5
+  ));
+
+  $("studyMins").value = study;
+  $("breakMins").value = shortBreak;
+
+  durations.pomodoro = study;
+  durations.short = shortBreak;
+
+  total = durations[mode] * 60;
+  remaining = total;
+  render();
+});
+
+$("goalMins").addEventListener("change", render);
+
+$("taskForm").addEventListener("submit", event => {
+  event.preventDefault();
+
+  const input = $("taskInput");
+  const value = input.value.trim();
+
+  if (!value) return;
+
+  tasks.push({
+    id: Date.now() + Math.random(),
+    text: value,
+    done: false
+  });
+
+  input.value = "";
+  renderTasks();
+});
+
+function renderTasks() {
+  const list = $("taskList");
+  list.replaceChildren();
+
+  if (tasks.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "muted";
+    empty.textContent = "Your tasks will appear here.";
+    list.appendChild(empty);
+  }
+
+  tasks.forEach(task => {
+    const item = document.createElement("li");
+    item.className = "task" + (task.done ? " done" : "");
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = task.done;
+    checkbox.setAttribute("aria-label", "Complete task");
+
+    checkbox.addEventListener("change", () => {
+      task.done = checkbox.checked;
+      renderTasks();
+    });
+
+    const text = document.createElement("span");
+    text.textContent = task.text;
+
+    const remove = document.createElement("button");
+    remove.className = "remove";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", "Remove task");
+
+    remove.addEventListener("click", () => {
+      tasks = tasks.filter(item => item.id !== task.id);
+      renderTasks();
+    });
+
+    item.append(checkbox, text, remove);
+    list.appendChild(item);
+  });
+}
+
+render();
+renderTasks();
+</script>
+</body>
+</html>
